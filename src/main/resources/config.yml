@@ -1,0 +1,38 @@
+
+
+## Egg Hunt
+eggHuntEnabled: false
+
+collectedEggMessage: "&6You have collected egg &f%foundEggNumber%&6/&f%maxEggs%!"
+alreadyCollectedEggMessage: "&cYou already found this egg!"
+allEggsCollectedMessage: "&6You have collected all %maxEggs% eggs! You have earned a reward!"
+# World
+eggHuntWorld: "spawn"
+
+## Bunny Races
+bunnyRaceEnabled: false
+
+# raceFrequency in Minutes
+raceFrequency: 15
+# bettingTime in Seconds
+bettingTime: 45
+
+## Mining Egg
+miningEggEnabled: false
+
+chanceToRoll: 0.75
+commonChance: 60.0
+rareChance: 30.0
+legendaryChance: 10.0
+
+# Health of spawned bunny, set to 0 for default health
+# Whole numbers only.
+commonHealth: 0
+rareHealth: 20
+legendaryHealth:  40
+
+# Amount of eggs to reward after killing bunny
+# Whole numbers only.
+commonReward: 1
+rareReward: 2
+legendaryReward:  3

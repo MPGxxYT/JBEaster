@@ -1,6 +1,10 @@
 name: JBEaster
 version: '1.0-SNAPSHOT'
-main: me.mortaldev.jBEaster.Main
+main: me.mortaldev.jbeaster.Main
 api-version: '1.19'
 authors: [ MortalDev/Mortality ]
 description: A plugin meant for the JBMC Easter Event
+depend:
+  - Skript
+  - Vault
+  - DecentHolograms

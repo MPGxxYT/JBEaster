@@ -1,17 +1,56 @@
 package me.mortaldev.jbeaster.utils;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonValue;
 import me.mortaldev.jbeaster.Main;
 import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class ChanceMap<T> {
-  LinkedHashMap<T, BigDecimal> table = new LinkedHashMap<>();
+  LinkedHashMap<T, BigDecimal> table;
+
+  @JsonCreator
+  public ChanceMap(LinkedHashMap<T, BigDecimal> initialTable) {
+    this.table = new LinkedHashMap<>(initialTable);
+  }
+  public ChanceMap() {
+    table = new LinkedHashMap<>();
+  }
+  /**
+   * Tells Jackson to serialize this ChanceMap object
+   * *as if* it were just the internal map.
+   *
+   * @return The internal map for Jackson serialization.
+   */
+  @JsonValue // Tells Jackson to use this method's return value for serialization
+  public LinkedHashMap<T, BigDecimal> getTableForSerialization() {
+    // Ensure the internal table is never null when serializing
+    return (this.table == null) ? new LinkedHashMap<>() : this.table;
+  }
+
+  @JsonIgnore // Ignore this for Jackson serialization/deserialization
+  public synchronized Set<Map.Entry<T, BigDecimal>> getEntriesForIteration() {
+    if (this.table == null) {
+      // Return an immutable empty set if the table isn't initialized
+      return Collections.emptySet();
+    }
+    // Return an unmodifiable view of the actual internal table's entry set
+    return Collections.unmodifiableSet(this.table.entrySet());
+  }
+
+  @JsonIgnore
+  public synchronized LinkedHashMap<T, BigDecimal> getTable() {
+    return (this.table == null) ? new LinkedHashMap<>() : new LinkedHashMap<>(this.table);
+  }
 
   public int size() {
     return table.size();
@@ -144,9 +183,6 @@ public class ChanceMap<T> {
     if (balanceAfter) {
       balanceTable();
     }
-    if (key instanceof ItemStack itemStack) {
-      System.out.println("1 itemStack.getType() = " + itemStack.getType());
-    }
   }
 
   public synchronized void remove(T key, boolean balanceAfter) {
@@ -157,15 +193,9 @@ public class ChanceMap<T> {
     if (balanceAfter) {
       balanceTable();
     }
-    if (key instanceof ItemStack itemStack) {
-      System.out.println("2 itemStack.getType() = " + itemStack.getType());
-    }
   }
 
-  public LinkedHashMap<T, BigDecimal> getTable() {
-    return table;
-  }
-
+  @JsonIgnore
   public synchronized void setTable(LinkedHashMap<T, BigDecimal> table) {
     this.table = table;
   }

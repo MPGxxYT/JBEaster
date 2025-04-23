@@ -26,9 +26,13 @@ public class DropPartyLoottableMenu extends InventoryGUI {
 
   DropPartyData dropPartyData;
 
-  // TODO: Fix related bug
-  public DropPartyLoottableMenu(DropPartyData dropPartyData) {
-    this.dropPartyData = dropPartyData;
+  public DropPartyLoottableMenu(DropPartyData specificDataInstance) {
+    if (specificDataInstance == null) {
+      System.err.println("[DropPartyMenu ERROR] Received null data instance in constructor!");
+      this.dropPartyData = DropPartyCRUD.getInstance().get();
+    } else {
+      this.dropPartyData = specificDataInstance;
+    }
     allowBottomInventoryClick(true);
   }
 
@@ -44,10 +48,25 @@ public class DropPartyLoottableMenu extends InventoryGUI {
     for (int i = 45; i < 54; i++) {
       this.getInventory().setItem(i, whiteGlass);
     }
-    int i = 0;
-    for (Map.Entry<ItemStack, BigDecimal> entry : dropPartyData.getTable().entrySet()) {
-      addButton(i, ItemButton(entry.getKey(), entry.getValue()));
-      i++;
+    int slotIndex = 0;
+    if (dropPartyData != null && dropPartyData.getTable() != null) {
+      for (Map.Entry<String, BigDecimal> entry : dropPartyData.getChanceMap().getEntriesForIteration()) {
+        String itemKeyString = entry.getKey();
+        BigDecimal value = entry.getValue();
+
+        ItemStack itemKey;
+        try {
+          itemKey = ItemStackHelper.deserialize(itemKeyString);
+        } catch (Exception e) {
+          System.err.println("[Decorate ERROR] Failed to deserialize item key string: " + itemKeyString);
+          e.printStackTrace();
+          continue;
+        }
+        addButton(slotIndex, ItemButton(itemKey, value));
+        slotIndex++;
+      }
+    } else {
+      System.err.println("[DropPartyMenu ERROR] DropPartyData or its table is null!");
     }
     addButton(49, AddItem());
     addButton(47, RebalanceButton());
@@ -81,7 +100,7 @@ public class DropPartyLoottableMenu extends InventoryGUI {
                             if (textEntry.trim().matches("^(\\d+(\\.\\d+)?)$")) {
                               dropPartyData.updateItem(itemStack, new BigDecimal(textEntry));
                               GUIManager.getInstance()
-                                  .openGUI(new DropPartyLoottableMenu(dropPartyData), player);
+                                  .openGUI(new DropPartyLoottableMenu(this.dropPartyData), player);
                             }
                           }
                           return Collections.emptyList();
@@ -89,7 +108,7 @@ public class DropPartyLoottableMenu extends InventoryGUI {
                     .open(player);
               } else {
                 dropPartyData.removeItem(itemStack);
-                GUIManager.getInstance().openGUI(new DropPartyLoottableMenu(dropPartyData), player);
+                GUIManager.getInstance().openGUI(new DropPartyLoottableMenu(this.dropPartyData), player);
               }
             });
   }
@@ -106,11 +125,13 @@ public class DropPartyLoottableMenu extends InventoryGUI {
             event -> {
               Player player = (Player) event.getWhoClicked();
               ItemStack itemStack = event.getCursor();
-              if (itemStack == null || itemStack.getType().isAir() || itemStack.getType() == Material.AIR) {
+              if (itemStack == null
+                  || itemStack.getType().isAir()
+                  || itemStack.getType() == Material.AIR) {
                 return;
               }
               dropPartyData.addItem(itemStack);
-              GUIManager.getInstance().openGUI(new DropPartyLoottableMenu(dropPartyData), player);
+              GUIManager.getInstance().openGUI(new DropPartyLoottableMenu(this.dropPartyData), player);
             });
   }
 
@@ -134,7 +155,7 @@ public class DropPartyLoottableMenu extends InventoryGUI {
                 return;
               }
               DropPartyCRUD.getInstance().save(dropPartyData);
-              GUIManager.getInstance().openGUI(new DropPartyLoottableMenu(dropPartyData), player);
+              GUIManager.getInstance().openGUI(new DropPartyLoottableMenu(this.dropPartyData), player);
             });
   }
 }

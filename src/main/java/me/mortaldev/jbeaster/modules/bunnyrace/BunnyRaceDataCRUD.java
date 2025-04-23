@@ -1,11 +1,13 @@
 package me.mortaldev.jbeaster.modules.bunnyrace;
 
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import me.mortaldev.crudapi.CRUDAdapters;
 import me.mortaldev.crudapi.SingleCRUD;
-import me.mortaldev.crudapi.handlers.GSON;
+import me.mortaldev.crudapi.handlers.Jackson;
 import me.mortaldev.jbeaster.Main;
+import me.mortaldev.jbeaster.testing.LocationDeserializer;
+import me.mortaldev.jbeaster.testing.LocationSerializer;
 import org.bukkit.Location;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 
@@ -21,12 +23,12 @@ public class BunnyRaceDataCRUD extends SingleCRUD<BunnyRaceData> {
   }
 
   private BunnyRaceDataCRUD() {
-    super(GSON.getInstance());
+    super(Jackson.getInstance());
   }
 
   @Override
   public BunnyRaceData construct() {
-    return new BunnyRaceData();
+    return new BunnyRaceData(new HashMap<>());
   }
 
   @Override
@@ -36,7 +38,12 @@ public class BunnyRaceDataCRUD extends SingleCRUD<BunnyRaceData> {
 
   @Override
   public CRUDAdapters getCRUDAdapters() {
-    return new CRUDAdapters();
+    CRUDAdapters crudAdapters = new CRUDAdapters();
+    SimpleModule simpleModule = new SimpleModule();
+    simpleModule.addSerializer(Location.class, new LocationSerializer());
+    simpleModule.addDeserializer(Location.class, new LocationDeserializer());
+    crudAdapters.setModule(simpleModule);
+    return crudAdapters;
   }
 
   @Override

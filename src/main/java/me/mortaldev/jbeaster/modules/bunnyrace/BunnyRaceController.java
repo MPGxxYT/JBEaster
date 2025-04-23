@@ -228,22 +228,42 @@ public class BunnyRaceController {
 
   public void refundAllPlayers(boolean onDisable) {
     BunnyRaceData bunnyRaceData = BunnyRaceDataCRUD.getInstance().get();
-    if (playerBets.isEmpty()) {
+
+    // --- Block 1: Handle persisted refunds ---
+    if (playerBets.isEmpty()) { // Only run if playerBets is empty
       HashMap<UUID, Double> refunds = bunnyRaceData.getRefunds();
-      if (!refunds.isEmpty()) {
-        for (Map.Entry<UUID, Double> entry : refunds.entrySet()) {
-          OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(entry.getKey());
-          Main.getEconomy().depositPlayer(offlinePlayer, entry.getValue());
+      // Create a copy of keys to iterate over safely
+      Set<UUID> keysToRefund = new HashSet<>(refunds.keySet());
+
+      if (!keysToRefund.isEmpty()) {
+        for (UUID key : keysToRefund) {
+          // Get the value associated with the key AT THIS MOMENT
+          // It might have been removed by another thread if this wasn't synchronized,
+          // but assuming single-threaded access here based on stack trace.
+          // However, using getRefunds() which returns the live map means we
+          // should ideally get the value before potentially removing.
+          // Let removeRefund handle getting the value if it needs it internally.
+
+          // It's safer to let removeRefund get the value if needed,
+          // but we need it for the message and economy deposit.
+          Double value = refunds.get(key);
+          if (value == null) continue; // Skip if somehow already removed
+
+          OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(key);
+          Main.getEconomy().depositPlayer(offlinePlayer, value);
           if (offlinePlayer.isOnline()) {
             offlinePlayer
-                    .getPlayer()
-                    .sendMessage(TextUtil.format("&cYou were refunded $" + formatNumber(entry.getValue())));
+                .getPlayer()
+                .sendMessage(TextUtil.format("&cYou were refunded $" + formatNumber(value)));
           }
-          bunnyRaceData.removeRefund(entry.getKey());
+          // Call the original method which removes from the map AND saves
+          bunnyRaceData.removeRefund(key);
         }
       }
-    }
+    } // --- End of Block 1 ---
 
+    // --- Block 2: Handle current playerBets ---
+    // This block already uses the correct iterator pattern
     Iterator<Map.Entry<UUID, PlayerBet>> iterator = playerBets.entrySet().iterator();
     while (iterator.hasNext()) {
       Map.Entry<UUID, PlayerBet> entry = iterator.next();
@@ -252,6 +272,7 @@ public class BunnyRaceController {
       }
       if (onDisable) {
         double refundAmount = getRefundAmount(entry.getKey(), 1);
+        // Note: addRefund also saves the data
         bunnyRaceData.addRefund(entry.getKey(), refundAmount);
       } else {
         double refund = getRefundAmount(entry.getKey(), 1);
@@ -259,12 +280,12 @@ public class BunnyRaceController {
         Main.getEconomy().depositPlayer(offlinePlayer, refund);
         if (offlinePlayer.isOnline()) {
           offlinePlayer
-                  .getPlayer()
-                  .sendMessage(TextUtil.format("&cYou were refunded $" + formatNumber(refund)));
+              .getPlayer()
+              .sendMessage(TextUtil.format("&cYou were refunded $" + formatNumber(refund)));
         }
       }
-      iterator.remove();
-    }
+      iterator.remove(); // Remove from playerBets map
+    } // --- End of Block 2 ---
   }
 
   public double refundPlayer(UUID uuid, double percentToRefund) {
@@ -436,7 +457,7 @@ public class BunnyRaceController {
     BunnyRaceData bunnyRaceData = BunnyRaceDataCRUD.getInstance().get();
     World world = BunnyRaceData.getDefaultPoint().getWorld();
     for (Map.Entry<Mob, Integer> entry : bunnyRacers.entrySet()) {
-      Location first = bunnyRaceData.getPoints(entry.getValue()).first();
+      Location first = bunnyRaceData.getPointsByIndex(entry.getValue()).first();
       world = first.getWorld();
       EntityController controller = BukkitBrain.getBrain(entry.getKey()).getController();
       controller.moveTo(first, 1);
@@ -481,7 +502,7 @@ public class BunnyRaceController {
     clearBunnies();
     scheduledTasks.forEach((key, value) -> Bukkit.getScheduler().cancelTask(value));
     scheduledTasks.clear();
-    World world = BunnyRaceDataCRUD.getInstance().get().getPoints(1).first().getWorld();
+    World world = BunnyRaceDataCRUD.getInstance().get().getPointsByIndex(1).first().getWorld();
     world.sendMessage(TextUtil.format(""));
     world.sendMessage(TextUtil.format("&eBunny Race has ended!"));
     world.sendMessage(TextUtil.format(""));
@@ -489,7 +510,7 @@ public class BunnyRaceController {
     for (int i = 0; i < winners.size(); i++) {
       Component bunnyName =
           TextUtil.format(
-              "&f" + BunnyRaceDataCRUD.getInstance().get().getBunnyName(winners.get(i)));
+              "&f" + BunnyRaceDataCRUD.getInstance().get().getBunnyNameByIndex(winners.get(i)));
       world.sendMessage(TextUtil.format("&6#&l" + (i + 1) + ": &f").append(bunnyName));
     }
     world.sendMessage(TextUtil.format(""));
@@ -510,7 +531,7 @@ public class BunnyRaceController {
     bunnyRacers.put(bunny, id);
     bunny.setCustomNameVisible(true);
     Component bunnyName =
-        TextUtil.format("&f" + BunnyRaceDataCRUD.getInstance().get().getBunnyName(id));
+        TextUtil.format("&f" + BunnyRaceDataCRUD.getInstance().get().getBunnyNameByIndex(id));
     bunny.customName(bunnyName);
     bunny.setInvulnerable(true);
     EntityBrain brain = BukkitBrain.getBrain(bunny);
@@ -534,7 +555,7 @@ public class BunnyRaceController {
     Pair<Location, Location> finishLine = BunnyRaceDataCRUD.getInstance().get().getFinishLine();
     bunnyRacers.forEach(
         (bunny, id) -> {
-          Location finish = BunnyRaceDataCRUD.getInstance().get().getPoints(id).second();
+          Location finish = BunnyRaceDataCRUD.getInstance().get().getPointsByIndex(id).second();
           EntityBrain brain = BukkitBrain.getBrain(bunny);
           EntityController controller = brain.getController();
           AtomicInteger speedUpdateCount = new AtomicInteger(0);

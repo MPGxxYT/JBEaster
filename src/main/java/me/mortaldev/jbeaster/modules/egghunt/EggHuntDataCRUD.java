@@ -1,13 +1,11 @@
 package me.mortaldev.jbeaster.modules.egghunt;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import me.mortaldev.crudapi.CRUDAdapters;
 import me.mortaldev.crudapi.SingleCRUD;
-import me.mortaldev.crudapi.handlers.GSON;
+import me.mortaldev.crudapi.handlers.Jackson;
 import me.mortaldev.jbeaster.Main;
-import org.bukkit.Location;
-import org.bukkit.inventory.ItemStack;
-
-import java.util.HashMap;
 
 public class EggHuntDataCRUD extends SingleCRUD<EggHuntData> {
   private static final String PATH = Main.getInstance().getDataFolder() + "/egghunt/";
@@ -21,7 +19,7 @@ public class EggHuntDataCRUD extends SingleCRUD<EggHuntData> {
   }
 
   private EggHuntDataCRUD() {
-    super(GSON.getInstance());
+    super(Jackson.getInstance());
   }
 
   @Override
@@ -31,7 +29,7 @@ public class EggHuntDataCRUD extends SingleCRUD<EggHuntData> {
 
   @Override
   public EggHuntData construct() {
-    return new EggHuntData();
+    return new EggHuntData(new ArrayList<>(), new HashSet<>());
   }
 
   @Override

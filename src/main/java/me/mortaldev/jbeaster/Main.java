@@ -3,17 +3,23 @@ package me.mortaldev.jbeaster;
 import ch.njol.skript.Skript;
 import ch.njol.skript.SkriptAddon;
 import co.aikar.commands.PaperCommandManager;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
 import me.mortaldev.jbeaster.commands.eastercommand.EasterRewardsCommand;
 import me.mortaldev.jbeaster.commands.eastercommand.JBEasterCommand;
 import me.mortaldev.jbeaster.configs.MainConfig;
 import me.mortaldev.jbeaster.listeners.DropPartyEvent;
+import me.mortaldev.jbeaster.listeners.MiningBunnyEvent;
 import me.mortaldev.jbeaster.listeners.bunnyrace.BunnyDenyEvent;
 import me.mortaldev.jbeaster.listeners.bunnyrace.BunnyRaceBetEvent;
-import me.mortaldev.jbeaster.listeners.MiningBunnyEvent;
 import me.mortaldev.jbeaster.listeners.egghunt.EditingClickEvent;
 import me.mortaldev.jbeaster.listeners.egghunt.EggHuntClickEvent;
 import me.mortaldev.jbeaster.modules.ActiveDate;
+import me.mortaldev.jbeaster.modules.DropPartyDataConverter;
+import me.mortaldev.jbeaster.modules.Migration;
 import me.mortaldev.jbeaster.modules.bunnyrace.BunnyRaceController;
+import me.mortaldev.jbeaster.modules.bunnyrace.BunnyRaceDataCRUD;
 import me.mortaldev.jbeaster.modules.dropparty.DropPartyCRUD;
 import me.mortaldev.jbeaster.modules.dropparty.DropPartyController;
 import me.mortaldev.jbeaster.modules.egghunt.EggHuntDataCRUD;
@@ -23,15 +29,10 @@ import me.mortaldev.jbeaster.modules.playerdata.PlayerDataManager;
 import me.mortaldev.menuapi.GUIListener;
 import me.mortaldev.menuapi.GUIManager;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import org.bukkit.Bukkit;
-
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Map;
 
 public final class Main extends JavaPlugin {
 
@@ -116,10 +117,35 @@ public final class Main extends JavaPlugin {
     // CONFIGS
     MainConfig.getInstance().load();
 
+    // --- Perform PlayerData Location Migration (if needed) ---
+    if (!MainConfig.getInstance().isPlayerDataLocationMigrated()) {
+      getLogger().info("Performing one-time PlayerData location format migration...");
+      boolean migrationSuccess = Migration.getInstance().performPlayerDataLocationMigration(); // Call migration method
+
+      if (migrationSuccess) {
+        getLogger().info("PlayerData location migration completed successfully.");
+        MainConfig.getInstance().setPlayerDataLocationMigrated(true);
+      } else {
+        getLogger().severe("*****************************************************");
+        getLogger().severe("PlayerData location migration FAILED! Check logs above.");
+        getLogger().severe("The plugin might not work correctly with location data.");
+        getLogger().severe("BACKUP your playerdata folder before restarting if needed.");
+        getLogger().severe("*****************************************************");
+        // Optional: Disable the plugin if migration is critical and failed
+        // getServer().getPluginManager().disablePlugin(this);
+        // return;
+      }
+    } else {
+      getLogger().info("PlayerData location format migration already completed.");
+    }
+    DropPartyDataConverter.convertOldJsonDropParty();
+    // --- End Migration ---
+
     // Managers (Loading data)
     //    GangManager.loadGangDataList();
     EggHuntDataCRUD.getInstance().load();
     PlayerDataManager.getInstance().load();
+    BunnyRaceDataCRUD.getInstance().load();
     DropPartyCRUD.getInstance().load();
 
     // GUI Manager

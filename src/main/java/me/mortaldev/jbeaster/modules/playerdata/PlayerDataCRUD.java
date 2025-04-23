@@ -3,6 +3,7 @@ package me.mortaldev.jbeaster.modules.playerdata;
 import me.mortaldev.crudapi.CRUD;
 import me.mortaldev.crudapi.CRUDAdapters;
 import me.mortaldev.crudapi.handlers.GSON;
+import me.mortaldev.crudapi.handlers.Jackson;
 import me.mortaldev.crudapi.interfaces.Handler;
 import me.mortaldev.jbeaster.Main;
 import org.bukkit.inventory.ItemStack;
@@ -12,8 +13,8 @@ import java.util.HashMap;
 public class PlayerDataCRUD extends CRUD<PlayerData> {
   private static final String PATH = Main.getInstance().getDataFolder() + "/playerdata/";
 
-  public PlayerDataCRUD() {
-    super(GSON.getInstance());
+  private PlayerDataCRUD() {
+    super(Jackson.getInstance());
   }
 
   private static class Singleton {

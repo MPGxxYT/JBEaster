@@ -1,70 +1,78 @@
 package me.mortaldev.jbeaster.modules.egghunt;
 
-import me.mortaldev.jbeaster.utils.ItemStackHelper;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import me.mortaldev.jbeaster.testing.ItemStackDeserializer;
+import me.mortaldev.jbeaster.testing.ItemStackSerializer;
+import me.mortaldev.jbeaster.testing.LocationDeserializer;
+import me.mortaldev.jbeaster.testing.LocationSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 public class EggHuntData {
 
-  private final HashSet<Map<String, Object>> locations = new HashSet<>();
-  private String currencyItemStack = ItemStackHelper.serialize(new ItemStack(Material.EGG));
-  private final List<String> winRewards = new ArrayList<>();
+  @JsonSerialize(contentUsing = LocationSerializer.class)
+  @JsonDeserialize(contentUsing = LocationDeserializer.class)
+  private final HashSet<Location> locations;
+  @JsonSerialize(using = ItemStackSerializer.class)
+  @JsonDeserialize(using = ItemStackDeserializer.class)
+  private ItemStack currencyItemStack = new ItemStack(Material.GOLD_INGOT);
+  @JsonSerialize(contentUsing = ItemStackSerializer.class)
+  @JsonDeserialize(contentUsing = ItemStackDeserializer.class)
+  private final List<ItemStack> winRewards;
+
+  public EggHuntData(@JsonProperty("winRewards") List<ItemStack> winRewards, @JsonProperty("locations") HashSet<Location> locations) {
+    this.winRewards = winRewards == null ? new ArrayList<>() : winRewards;
+    this.locations = locations == null ? new HashSet<>() : locations;
+  }
 
   public void addWinReward(ItemStack reward) {
-    winRewards.add(ItemStackHelper.serialize(reward));
+    winRewards.add(reward);
     EggHuntDataCRUD.getInstance().save(this);
   }
 
+  @JsonIgnore
   public List<ItemStack> getWinRewards() {
-    List<ItemStack> winRewards = new ArrayList<>();
-    for (String reward : this.winRewards) {
-      winRewards.add(ItemStackHelper.deserialize(reward));
-    }
     return winRewards;
   }
 
+  @JsonIgnore
   public void setWinRewards(List<ItemStack> itemStacks) {
     winRewards.clear();
-    for (ItemStack itemStack : itemStacks) {
-      winRewards.add(ItemStackHelper.serialize(itemStack));
-    }
+    winRewards.addAll(itemStacks);
     EggHuntDataCRUD.getInstance().save(this);
   }
 
   public void addLocation(Location location) {
-    locations.add(location.serialize());
+    locations.add(location);
     EggHuntDataCRUD.getInstance().save(this);
   }
 
   public boolean hasLocation(Location location) {
-    return locations.contains(location.serialize());
+    return locations.contains(location);
   }
 
   public void removeLocation(Location location) {
-    locations.remove(location.serialize());
+    locations.remove(location);
     EggHuntDataCRUD.getInstance().save(this);
   }
 
   public HashSet<Location> getLocations() {
-    HashSet<Location> locations = new HashSet<>();
-    for (Map<String, Object> location : this.locations) {
-      locations.add(Location.deserialize(location));
-    }
     return locations;
   }
 
   public void setCurrencyItemStack(ItemStack currencyItemStack) {
-    this.currencyItemStack = ItemStackHelper.serialize(currencyItemStack);
+    this.currencyItemStack = currencyItemStack;
     EggHuntDataCRUD.getInstance().save(this);
   }
 
   public ItemStack getCurrencyItemStack() {
-    return ItemStackHelper.deserialize(currencyItemStack);
+    return currencyItemStack;
   }
 }

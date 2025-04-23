@@ -2,13 +2,8 @@ package me.mortaldev.jbeaster.modules.dropparty;
 
 import me.mortaldev.crudapi.CRUDAdapters;
 import me.mortaldev.crudapi.SingleCRUD;
-import me.mortaldev.crudapi.handlers.GSON;
+import me.mortaldev.crudapi.handlers.Jackson;
 import me.mortaldev.jbeaster.Main;
-import me.mortaldev.jbeaster.utils.ChanceMap;
-import org.bukkit.Location;
-import org.bukkit.inventory.ItemStack;
-
-import java.util.HashMap;
 
 public class DropPartyCRUD extends SingleCRUD<DropPartyData> {
 
@@ -21,14 +16,14 @@ public class DropPartyCRUD extends SingleCRUD<DropPartyData> {
   }
 
   private DropPartyCRUD() {
-    super(GSON.getInstance());
+    super(Jackson.getInstance());
   }
 
   private static final String PATH = Main.getInstance().getDataFolder() + "/dropparty/";
 
   @Override
   public DropPartyData construct() {
-    return new DropPartyData();
+    return DropPartyData.getDefault();
   }
 
   @Override
@@ -50,4 +45,5 @@ public class DropPartyCRUD extends SingleCRUD<DropPartyData> {
   public String getID() {
     return "data";
   }
+
 }

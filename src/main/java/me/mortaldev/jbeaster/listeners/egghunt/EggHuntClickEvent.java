@@ -85,7 +85,7 @@ public class EggHuntClickEvent implements Listener {
     PlayerData playerData =
         PlayerDataManager.getInstance()
             .getByID(player.getUniqueId().toString())
-            .orElse(new PlayerData(player.getUniqueId().toString()));
+            .orElse(PlayerData.create(player.getUniqueId().toString()));
     PlayerDataManager.getInstance().update(playerData, true);
     Location location = event.getClickedBlock().getLocation();
     addDelay(player.getUniqueId());

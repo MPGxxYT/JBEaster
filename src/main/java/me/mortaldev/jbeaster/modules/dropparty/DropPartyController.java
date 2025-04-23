@@ -194,8 +194,7 @@ public class DropPartyController {
 
   private void displayUniqueReward(Location location, Player player) {
     World world = location.getWorld();
-    String winStackBefore = DropPartyCRUD.getInstance().get().getChanceMap().roll();
-    ItemStack winStack = ItemStackHelper.deserialize(winStackBefore);
+    ItemStack winStack = ItemStackHelper.deserialize(DropPartyCRUD.getInstance().get().getChanceMap().roll());
     if (world == null) {
       player.sendMessage(TextUtil.format("&cInvalid world for displaying reward!"));
       return;

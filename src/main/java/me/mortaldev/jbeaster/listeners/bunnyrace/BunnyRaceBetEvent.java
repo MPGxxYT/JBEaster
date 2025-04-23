@@ -39,11 +39,11 @@ public class BunnyRaceBetEvent implements Listener {
     } catch (NumberFormatException e) {
       player.sendMessage(TextUtil.format("&cFailed to place bet."));
     }
-    String bunnyName = BunnyRaceDataCRUD.getInstance().get().getBunnyName(id);
+    String bunnyName = BunnyRaceDataCRUD.getInstance().get().getBunnyNameByIndex(id);
     PlayerData playerData =
         PlayerDataManager.getInstance()
             .getByID(player.getUniqueId().toString())
-            .orElse(new PlayerData(player.getUniqueId().toString()));
+            .orElse(PlayerData.create(player.getUniqueId().toString()));
 //    if (!playerData.getRewardOverflow().isEmpty()) {
 //      player.sendMessage(TextUtil.format("You cannot place bets while you have rewards to claim."));
 //      player.sendMessage(TextUtil.format("Use /easterRewards to claim them."));

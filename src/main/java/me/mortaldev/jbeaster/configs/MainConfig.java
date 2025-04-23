@@ -34,6 +34,8 @@ public class MainConfig extends AbstractConfig {
   private ConfigValue<Integer> commonReward = new ConfigValue<>("commonReward", 1);
   private ConfigValue<Integer> rareReward = new ConfigValue<>("rareReward", 2);
   private ConfigValue<Integer> legendaryReward = new ConfigValue<>("legendaryReward", 3);
+  private ConfigValue<Boolean> playerDataLocationMigrated =
+      new ConfigValue<>("internal.playerdata-location-migrated", false);
 
   private static class Singleton {
     private static final MainConfig INSTANCE = new MainConfig();
@@ -65,6 +67,7 @@ public class MainConfig extends AbstractConfig {
     eggHuntWorld = getConfigValue(eggHuntWorld);
     raceFrequency = getConfigValue(raceFrequency);
     bettingTime = getConfigValue(bettingTime);
+    playerDataLocationMigrated = getConfigValue(playerDataLocationMigrated);
     loadToggles();
     loadMessages();
     loadMiningEggData();
@@ -93,6 +96,15 @@ public class MainConfig extends AbstractConfig {
     commonReward = getConfigValue(commonReward);
     rareReward = getConfigValue(rareReward);
     legendaryReward = getConfigValue(legendaryReward);
+  }
+
+  public Boolean isPlayerDataLocationMigrated() {
+    return playerDataLocationMigrated.getValue();
+  }
+
+  public void setPlayerDataLocationMigrated(boolean migrated) {
+    playerDataLocationMigrated.setValue(migrated);
+    saveValue(playerDataLocationMigrated);
   }
 
   public double getChanceToRoll() {

@@ -37,9 +37,10 @@ public class PlayerDataManager extends CRUDManager<PlayerData> {
   public void givePlayerReward(Player player, ItemStack reward) {
     givePlayerReward(player.getUniqueId(), reward);
   }
+
   public void givePlayerReward(UUID uuid, ItemStack reward) {
     OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-    PlayerData playerData = getByID(uuid.toString()).orElse(new PlayerData(uuid.toString()));
+    PlayerData playerData = getByID(uuid.toString()).orElse(PlayerData.create(uuid.toString()));
     if (!offlinePlayer.isOnline()) { // Player is offline
       playerData.addRewardOverflow(reward);
     } else { // Player is online

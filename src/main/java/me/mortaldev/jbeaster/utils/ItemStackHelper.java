@@ -20,7 +20,8 @@ public class ItemStackHelper {
    */
   public static String serialize(ItemStack itemStack) {
     byte[] itemStackAsBytes = itemStack.serializeAsBytes();
-    return Base64.getEncoder().encodeToString(itemStackAsBytes);
+    String resultString = Base64.getEncoder().encodeToString(itemStackAsBytes);
+    return resultString;
   }
 
   /**

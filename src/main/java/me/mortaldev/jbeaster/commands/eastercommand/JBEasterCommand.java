@@ -40,6 +40,9 @@ import java.util.Optional;
 @SuppressWarnings("InnerClassMayBeStatic")
 public class JBEasterCommand extends BaseCommand {
 
+
+
+
   private String locationToString(Location location, boolean includeWorld) {
     if (location == null) {
       return " ~ ";
@@ -154,14 +157,14 @@ public class JBEasterCommand extends BaseCommand {
 
     @Subcommand("loottable")
     public void openLoottable(Player player) {
+      DropPartyData currentData = DropPartyCRUD.getInstance().get();
       GUIManager.getInstance()
-          .openGUI(new DropPartyLoottableMenu(DropPartyCRUD.getInstance().get()), player);
+          .openGUI(new DropPartyLoottableMenu(currentData), player);
     }
 
     @Subcommand("roll")
     public void rollLoottable(Player player) {
-      String deserialize = DropPartyCRUD.getInstance().get().getChanceMap().roll();
-      ItemStack win = ItemStackHelper.deserialize(deserialize);
+      ItemStack win = ItemStackHelper.deserialize(DropPartyCRUD.getInstance().get().getChanceMap().roll());
       player.getInventory().addItem(win);
       player.sendMessage(TextUtil.format("&aYou rolled &f" + win.getType()));
     }
